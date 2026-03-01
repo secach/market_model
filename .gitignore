@@ -1,0 +1,24 @@
+# Python virtual environments
+.venv/
+venv/
+
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# VS Code settings
+.vscode/
+
+# Mac OS files
+.DS_Store
+
+# Logs
+*.log
+
+# Optional: ignore CSV if you don't want to push data
+# data/*.csv
+
+# Optional: ignore Jupyter notebooks checkpoints
+.ipynb_checkpoints/
