@@ -3,7 +3,7 @@
 import pandas as pd
 import statsmodels.api as sm
 
-def compute_signal(csv_path, ar_weight=0.5, weight_signal_weight=0.5, rolling_window=5):
+def compute_signal(csv_path, ar_weight=0.5, weight_signal_weight=0.5, rolling_window=10):
     """
     Predict next-day index return using:
     1. Rolling-window AR(1) on index returns
