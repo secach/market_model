@@ -17,7 +17,7 @@ def compute_signal(csv_path, ar_weight=0.5, weight_signal_weight=0.5, rolling_wi
     df["Date"] = pd.to_datetime(df["Date"], dayfirst=False)
     df = df.sort_values("Date")
 
-    # 2️⃣ Index returns
+    # Index returns
     df["Index_Return"] = df["Index"].pct_change()
     df = df.dropna()
 
@@ -43,7 +43,7 @@ def compute_signal(csv_path, ar_weight=0.5, weight_signal_weight=0.5, rolling_wi
     for ret_col in stock_return_cols:
         weight_col = ret_col.replace("_Return", "_Weight")
         # rolling average of stock returns
-        avg_ret = df[ret_col].iloc[-rolling_window:].mean() / 100  # percent → decimal
+        avg_ret = df[ret_col].iloc[-rolling_window:].mean() / 100  # percent - decimal
         w = df[weight_col].iloc[-1] / 100  # latest weight
         predicted_return_weighted += avg_ret * w
 
