@@ -12,9 +12,9 @@ def compute_signal(csv_path, ar_weight=0.5, weight_signal_weight=0.5, rolling_wi
     """
 
     # 1️⃣ Load CSV
-    df = pd.read_csv(csv_path, sep='|')
+    df = pd.read_csv(csv_path, sep=',')
     df.columns = df.columns.str.strip()  # remove spaces
-    df["Date"] = pd.to_datetime(df["Date"], dayfirst=True)
+    df["Date"] = pd.to_datetime(df["Date"], dayfirst=False)
     df = df.sort_values("Date")
 
     # 2️⃣ Index returns
