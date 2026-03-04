@@ -22,3 +22,7 @@ __pycache__/
 
 # Optional: ignore Jupyter notebooks checkpoints
 .ipynb_checkpoints/
+
+# Ignore temporary model files
+src/model.__*
+sort_csv._ 
