@@ -3,7 +3,7 @@
 import pandas as pd
 import statsmodels.api as sm
 
-def compute_signal(csv_path, ar_weight=0.5, weight_signal_weight=0.5, rolling_window=10):
+def compute_signal(csv_path, ar_weight=0.5, weight_signal_weight=0.5, rolling_window=20):
     """
     Predict next-day index return using:
     1. Rolling-window AR(1) on index returns
@@ -15,29 +15,34 @@ def compute_signal(csv_path, ar_weight=0.5, weight_signal_weight=0.5, rolling_wi
     df = pd.read_csv(csv_path, sep=',')
     df.columns = df.columns.str.strip()  # remove spaces
     df["Date"] = pd.to_datetime(df["Date"], dayfirst=False)
-    df = df.sort_values("Date")
+    df = df.sort_values("Date").reset_index(drop=True)
+
+    # print(df.tail(20))
+    # print("Last date:", df["Date"].max())
 
     # Index returns
     df["Index_Return"] = df["Index"].pct_change()
-    df = df.dropna()
+    df = df.dropna(subset=["Index_Return"])
 
     # --- AR(1) signal using rolling window ---
     df["Lag_Return"] = df["Index_Return"].shift(1)
-    ar_df = df.dropna()
+    ar_df = df.dropna(subset=["Lag_Return"])
 
     # Take last `rolling_window` rows for smoothing
-    ar_df_rolling = ar_df.iloc[-rolling_window:]
+    ar_df_rolling = ar_df.tail(rolling_window)
 
     X_ar = sm.add_constant(ar_df_rolling["Lag_Return"])
     y_ar = ar_df_rolling["Index_Return"]
     model_ar = sm.OLS(y_ar, X_ar).fit()
     last_lag = ar_df_rolling["Lag_Return"].iloc[-1]
-    predicted_return_ar = model_ar.predict([1, last_lag])[0]
+    predicted_return_ar = model_ar.predict([[1, last_lag]])[0]
 
     # --- Weighted stock signal using rolling window ---
     stock_return_cols = [col for col in df.columns 
                          if "_return" in col.lower() 
                          and col.lower() not in ["index_return", "lag_return"]]
+    
+    print("Stock return columns:", stock_return_cols)
 
     predicted_return_weighted = 0
     for ret_col in stock_return_cols:

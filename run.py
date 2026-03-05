@@ -4,7 +4,7 @@ result = compute_signal(
     "data/index_data.csv", 
     ar_weight=0.4, 
     weight_signal_weight=0.6,
-    rolling_window=5
+    rolling_window=20
 )
 
 print("Predicted return:", result["predicted_return"])
