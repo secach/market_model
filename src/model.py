@@ -1,5 +1,7 @@
 # model.py (rolling window version)
 
+from turtle import down, up, up
+
 import pandas as pd
 import statsmodels.api as sm
 
@@ -44,6 +46,21 @@ def compute_signal(csv_path, ar_weight=0.5, weight_signal_weight=0.5, rolling_wi
     
     print("Stock return columns:", stock_return_cols)
 
+    up = 0
+    down = 0
+
+    for col in stock_return_cols:
+        last_ret = df[col].iloc[-1]
+
+        if last_ret > 0:
+            up += 1
+        elif last_ret < 0:
+            down += 1
+
+    breadth = (up - down) / (up + down)
+
+    breadth_signal = breadth * 0.002
+
     predicted_return_weighted = 0
     for ret_col in stock_return_cols:
         weight_col = ret_col.replace("_Return", "_Weight")
@@ -54,8 +71,9 @@ def compute_signal(csv_path, ar_weight=0.5, weight_signal_weight=0.5, rolling_wi
 
     # --- Combine signals ---
     predicted_return = (
-        ar_weight * predicted_return_ar +
-        weight_signal_weight * predicted_return_weighted
+    ar_weight * predicted_return_ar +
+    weight_signal_weight * predicted_return_weighted +
+    0.2 * breadth_signal
     )
 
     # --- Predict next index price ---
