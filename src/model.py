@@ -1,15 +1,20 @@
-# model.py (rolling window version)
-
-from turtle import down, up, up
+# model.py (improved rolling window version)
 
 import pandas as pd
 import statsmodels.api as sm
 
-def compute_signal(csv_path, ar_weight=0.5, weight_signal_weight=0.5, rolling_window=20):
+def compute_signal(
+    csv_path, 
+    ar_weight=0.5, 
+    weight_signal_weight=0.5, 
+    rolling_window=20, 
+    top_n_stocks=10,
+    stock_signal_cap=0.01
+):
     """
     Predict next-day index return using:
     1. Rolling-window AR(1) on index returns
-    2. Rolling-window weighted sum of stock returns
+    2. Rolling-window weighted sum of top N stock returns
     Automatically converts stock returns from percent to decimal.
     """
 
@@ -17,63 +22,52 @@ def compute_signal(csv_path, ar_weight=0.5, weight_signal_weight=0.5, rolling_wi
     df = pd.read_csv(csv_path, sep=',')
     df.columns = df.columns.str.strip()  # remove spaces
     df["Date"] = pd.to_datetime(df["Date"], dayfirst=False)
-    df = df.sort_values("Date").reset_index(drop=True)
-
-    # print(df.tail(20))
-    # print("Last date:", df["Date"].max())
+    df = df.sort_values("Date")
 
     # Index returns
     df["Index_Return"] = df["Index"].pct_change()
-    df = df.dropna(subset=["Index_Return"])
+    df = df.dropna()
 
     # --- AR(1) signal using rolling window ---
     df["Lag_Return"] = df["Index_Return"].shift(1)
-    ar_df = df.dropna(subset=["Lag_Return"])
-
-    # Take last `rolling_window` rows for smoothing
-    ar_df_rolling = ar_df.tail(rolling_window)
+    ar_df = df.dropna()
+    ar_df_rolling = ar_df.iloc[-rolling_window:]
 
     X_ar = sm.add_constant(ar_df_rolling["Lag_Return"])
     y_ar = ar_df_rolling["Index_Return"]
     model_ar = sm.OLS(y_ar, X_ar).fit()
     last_lag = ar_df_rolling["Lag_Return"].iloc[-1]
-    predicted_return_ar = model_ar.predict([[1, last_lag]])[0]
+    predicted_return_ar = model_ar.predict([1, last_lag])[0]
 
     # --- Weighted stock signal using rolling window ---
+    # Identify all stock return columns (exclude index)
     stock_return_cols = [col for col in df.columns 
                          if "_return" in col.lower() 
                          and col.lower() not in ["index_return", "lag_return"]]
-    
-    print("Stock return columns:", stock_return_cols)
 
-    up = 0
-    down = 0
-
-    for col in stock_return_cols:
-        last_ret = df[col].iloc[-1]
-
-        if last_ret > 0:
-            up += 1
-        elif last_ret < 0:
-            down += 1
-
-    breadth = (up - down) / (up + down)
-
-    breadth_signal = breadth * 0.002
-
-    predicted_return_weighted = 0
+    # Sort by latest weight to get top N stocks
+    stock_weights = {}
     for ret_col in stock_return_cols:
         weight_col = ret_col.replace("_Return", "_Weight")
-        # rolling average of stock returns
-        avg_ret = df[ret_col].iloc[-rolling_window:].mean() / 100  # percent - decimal
-        w = df[weight_col].iloc[-1] / 100  # latest weight
+        if weight_col in df.columns:
+            stock_weights[ret_col] = df[weight_col].iloc[-1]
+    
+    # Take top N stocks by weight
+    top_stocks = sorted(stock_weights.items(), key=lambda x: x[1], reverse=True)[:top_n_stocks]
+
+    predicted_return_weighted = 0
+    for ret_col, weight in top_stocks:
+        avg_ret = df[ret_col].iloc[-rolling_window:].mean() / 100  # % → decimal
+        w = weight / 100  # latest weight
         predicted_return_weighted += avg_ret * w
+
+    # Cap the weighted stock signal
+    predicted_return_weighted = max(-stock_signal_cap, min(stock_signal_cap, predicted_return_weighted))
 
     # --- Combine signals ---
     predicted_return = (
-    ar_weight * predicted_return_ar +
-    weight_signal_weight * predicted_return_weighted +
-    0.2 * breadth_signal
+        ar_weight * predicted_return_ar +
+        weight_signal_weight * predicted_return_weighted
     )
 
     # --- Predict next index price ---
