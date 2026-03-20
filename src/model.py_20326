@@ -1,0 +1,84 @@
+# model.py (improved rolling window version)
+
+import pandas as pd
+import statsmodels.api as sm
+
+def compute_signal(
+    csv_path, 
+    ar_weight=0.5, 
+    weight_signal_weight=0.5, 
+    rolling_window=20, 
+    top_n_stocks=10,
+    stock_signal_cap=0.01
+):
+    """
+    Predict next-day index return using:
+    1. Rolling-window AR(1) on index returns
+    2. Rolling-window weighted sum of top N stock returns
+    Automatically converts stock returns from percent to decimal.
+    """
+
+    # 1️⃣ Load CSV
+    df = pd.read_csv(csv_path, sep=',')
+    df.columns = df.columns.str.strip()  # remove spaces
+    df["Date"] = pd.to_datetime(df["Date"], dayfirst=False)
+    df = df.sort_values("Date")
+
+    # Index returns
+    df["Index_Return"] = df["Index"].pct_change()
+    df = df.dropna()
+
+    # --- AR(1) signal using rolling window ---
+    df["Lag_Return"] = df["Index_Return"].shift(1)
+    ar_df = df.dropna()
+    ar_df_rolling = ar_df.iloc[-rolling_window:]
+
+    X_ar = sm.add_constant(ar_df_rolling["Lag_Return"])
+    y_ar = ar_df_rolling["Index_Return"]
+    model_ar = sm.OLS(y_ar, X_ar).fit()
+    last_lag = ar_df_rolling["Lag_Return"].iloc[-1]
+    predicted_return_ar = model_ar.predict([1, last_lag])[0]
+
+    # --- Weighted stock signal using rolling window ---
+    # Identify all stock return columns (exclude index)
+    stock_return_cols = [col for col in df.columns 
+                         if "_return" in col.lower() 
+                         and col.lower() not in ["index_return", "lag_return"]]
+
+    # Sort by latest weight to get top N stocks
+    stock_weights = {}
+    for ret_col in stock_return_cols:
+        weight_col = ret_col.replace("_Return", "_Weight")
+        if weight_col in df.columns:
+            stock_weights[ret_col] = df[weight_col].iloc[-1]
+    
+    # Take top N stocks by weight
+    top_stocks = sorted(stock_weights.items(), key=lambda x: x[1], reverse=True)[:top_n_stocks]
+
+    predicted_return_weighted = 0
+    for ret_col, weight in top_stocks:
+        # yesterday's return (lagged)
+        ret = df[ret_col].iloc[-2] / 100
+        w = weight / 100  # latest weight
+        predicted_return_weighted += ret * w
+
+    # Cap the weighted stock signal
+    predicted_return_weighted = max(-stock_signal_cap, min(stock_signal_cap, predicted_return_weighted))
+
+    # --- Combine signals ---
+    predicted_return = (
+        ar_weight * predicted_return_ar +
+        weight_signal_weight * predicted_return_weighted
+    )
+
+    # --- Predict next index price ---
+    last_price = df["Index"].iloc[-1]
+    predicted_price = last_price * (1 + predicted_return)
+
+    return {
+        "predicted_return": predicted_return,
+        "predicted_price": predicted_price,
+        "ar_prediction": predicted_return_ar,
+        "weighted_prediction": predicted_return_weighted,
+        "ar_model": model_ar
+    }

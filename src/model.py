@@ -1,83 +1,211 @@
-# model.py (improved rolling window version)
-
 import pandas as pd
 import statsmodels.api as sm
+from sklearn.linear_model import LogisticRegression
+from sklearn.preprocessing import StandardScaler
+
+
 
 def compute_signal(
-    csv_path, 
-    ar_weight=0.5, 
-    weight_signal_weight=0.5, 
-    rolling_window=20, 
-    top_n_stocks=10,
-    stock_signal_cap=0.01
+    csv_path,
+    rolling_window=60,
+    use_sp500=False,
+    sp500_col="SP500_Return",
 ):
     """
-    Predict next-day index return using:
-    1. Rolling-window AR(1) on index returns
-    2. Rolling-window weighted sum of top N stock returns
-    Automatically converts stock returns from percent to decimal.
+    Predict next-day index return using a rolling regression:
+
+        Index_Return_t =
+            alpha
+          + beta * Index_Return_{t-1}
+          + gamma * Weighted_Stock_Return_{t-1}
+          + delta * SP500_Return_{t-1}   (optional)
+
+    Assumptions:
+    - stock return columns are named like XXX_Return
+    - weight columns are named like XXX_Weight
+    - stock returns in CSV are in PERCENT units (e.g. 0.61 means 0.61%)
+    - weight columns are also in PERCENT units (e.g. 7.8 means 7.8%)
     """
 
-    # 1️⃣ Load CSV
-    df = pd.read_csv(csv_path, sep=',')
-    df.columns = df.columns.str.strip()  # remove spaces
-    df["Date"] = pd.to_datetime(df["Date"], dayfirst=False)
-    df = df.sort_values("Date")
+    # Load data
+    df = pd.read_csv(csv_path)
+    df.columns = df.columns.str.strip()
+    df["Date"] = pd.to_datetime(df["Date"], errors="coerce")
+    df = df.sort_values("Date").reset_index(drop=True)
 
-    # Index returns
+    # Index return in decimal
     df["Index_Return"] = df["Index"].pct_change()
-    df = df.dropna()
 
-    # --- AR(1) signal using rolling window ---
-    df["Lag_Return"] = df["Index_Return"].shift(1)
-    ar_df = df.dropna()
-    ar_df_rolling = ar_df.iloc[-rolling_window:]
+    # Find stock return columns
+    stock_return_cols = [
+        col for col in df.columns
+        if col.endswith("_Return") and col != "Index_Return"
+    ]
 
-    X_ar = sm.add_constant(ar_df_rolling["Lag_Return"])
-    y_ar = ar_df_rolling["Index_Return"]
-    model_ar = sm.OLS(y_ar, X_ar).fit()
-    last_lag = ar_df_rolling["Lag_Return"].iloc[-1]
-    predicted_return_ar = model_ar.predict([1, last_lag])[0]
+    # Build same-day weighted stock return, then lag it
+    weighted_stock_return = pd.Series(0.0, index=df.index)
 
-    # --- Weighted stock signal using rolling window ---
-    # Identify all stock return columns (exclude index)
-    stock_return_cols = [col for col in df.columns 
-                         if "_return" in col.lower() 
-                         and col.lower() not in ["index_return", "lag_return"]]
-
-    # Sort by latest weight to get top N stocks
-    stock_weights = {}
     for ret_col in stock_return_cols:
         weight_col = ret_col.replace("_Return", "_Weight")
-        if weight_col in df.columns:
-            stock_weights[ret_col] = df[weight_col].iloc[-1]
-    
-    # Take top N stocks by weight
-    top_stocks = sorted(stock_weights.items(), key=lambda x: x[1], reverse=True)[:top_n_stocks]
+        if weight_col not in df.columns:
+            continue
 
-    predicted_return_weighted = 0
-    for ret_col, weight in top_stocks:
-        avg_ret = df[ret_col].iloc[-rolling_window:].mean() / 100  # % → decimal
-        w = weight / 100  # latest weight
-        predicted_return_weighted += avg_ret * w
+        # Stock returns assumed in percent -> decimal
+        stock_ret_decimal = df[ret_col] / 100.0
 
-    # Cap the weighted stock signal
-    predicted_return_weighted = max(-stock_signal_cap, min(stock_signal_cap, predicted_return_weighted))
+        # Quarter weights assumed in percent -> decimal
+        weight_decimal = df[weight_col] / 100.0
 
-    # --- Combine signals ---
-    predicted_return = (
-        ar_weight * predicted_return_ar +
-        weight_signal_weight * predicted_return_weighted
-    )
+        weighted_stock_return += stock_ret_decimal * weight_decimal
 
-    # --- Predict next index price ---
-    last_price = df["Index"].iloc[-1]
-    predicted_price = last_price * (1 + predicted_return)
+    df["Weighted_Stock_Return"] = weighted_stock_return
+    df["Lag_Index_Return"] = df["Index_Return"].shift(1)
+    df["Lag_Weighted_Stock_Return"] = df["Weighted_Stock_Return"].shift(1)
+
+    feature_cols = ["Lag_Index_Return", "Lag_Weighted_Stock_Return"]
+
+    if use_sp500:
+        if sp500_col not in df.columns:
+            raise ValueError(f"Column '{sp500_col}' not found in CSV.")
+
+        # Detect whether SP500 returns are percent or decimal
+        sp500_series = df[sp500_col].copy()
+        if sp500_series.abs().median(skipna=True) > 1:
+            sp500_series = sp500_series / 100.0
+
+        df["Lag_SP500_Return"] = sp500_series.shift(1)
+        feature_cols.append("Lag_SP500_Return")
+
+    # Keep only rows with complete data
+    model_df = df[["Date", "Index", "Index_Return"] + feature_cols].dropna().copy()
+
+    if len(model_df) < rolling_window:
+        raise ValueError(
+            f"Not enough data after preprocessing. "
+            f"Need at least {rolling_window} usable rows, got {len(model_df)}."
+        )
+
+    # Rolling window for training
+    # Rolling window for training
+    train_df = model_df.iloc[-rolling_window:].copy()
+
+    train_df["Direction"] = (train_df["Index_Return"] > 0).astype(int)
+
+    X_train = train_df[feature_cols]
+    y_train = train_df["Direction"]
+
+    scaler = StandardScaler()
+    X_train_scaled = scaler.fit_transform(X_train)
+
+    model = LogisticRegression(class_weight="balanced")
+    model.fit(X_train_scaled, y_train)
+
+    latest_features = model_df[feature_cols].iloc[-1]
+    X_next = pd.DataFrame([latest_features], columns=feature_cols)
+    X_next_scaled = scaler.transform(X_next)
+
+    pred_prob_up = float(model.predict_proba(X_next_scaled)[0][1])
+    predicted_direction = 1 if pred_prob_up > 0.5 else 0
+
+    last_price = float(df["Index"].dropna().iloc[-1])
 
     return {
-        "predicted_return": predicted_return,
-        "predicted_price": predicted_price,
-        "ar_prediction": predicted_return_ar,
-        "weighted_prediction": predicted_return_weighted,
-        "ar_model": model_ar
+        "predicted_direction": predicted_direction,
+        "probability_up": pred_prob_up,
+        "last_price": last_price,
+        "features_used": feature_cols,
+        "latest_feature_values": latest_features.to_dict(),
+        "model_coefficients": dict(zip(feature_cols, model.coef_[0])),
+        "model_intercept": float(model.intercept_[0]),
+    }
+
+
+def backtest_model(
+    csv_path,
+    rolling_window=60,
+    use_sp500=False,
+    sp500_col="SP500_Return",
+):
+    df = pd.read_csv(csv_path)
+    df.columns = df.columns.str.strip()
+    df["Date"] = pd.to_datetime(df["Date"], errors="coerce")
+    df = df.sort_values("Date").reset_index(drop=True)
+
+    df["Index_Return"] = df["Index"].pct_change()
+
+    stock_return_cols = [
+        col for col in df.columns
+        if col.endswith("_Return") and col != "Index_Return"
+    ]
+
+    weighted_stock_return = pd.Series(0.0, index=df.index)
+
+    for ret_col in stock_return_cols:
+        weight_col = ret_col.replace("_Return", "_Weight")
+        if weight_col not in df.columns:
+            continue
+        weighted_stock_return += (df[ret_col] / 100.0) * (df[weight_col] / 100.0)
+
+    df["Weighted_Stock_Return"] = weighted_stock_return
+    df["Lag_Index_Return"] = df["Index_Return"].shift(1)
+    df["Lag_Weighted_Stock_Return"] = df["Weighted_Stock_Return"].shift(1)
+
+    feature_cols = ["Lag_Index_Return", "Lag_Weighted_Stock_Return"]
+
+    if use_sp500:
+        if sp500_col not in df.columns:
+            raise ValueError(f"Column '{sp500_col}' not found in CSV.")
+        sp500_series = df[sp500_col].copy()
+        if sp500_series.abs().median(skipna=True) > 1:
+            sp500_series = sp500_series / 100.0
+        df["Lag_SP500_Return"] = sp500_series.shift(1)
+        feature_cols.append("Lag_SP500_Return")
+
+    model_df = df[["Date", "Index_Return"] + feature_cols].dropna().copy()
+    results = []
+
+    for i in range(rolling_window, len(model_df)):
+        train = model_df.iloc[i - rolling_window:i].copy()
+        test = model_df.iloc[i]
+
+        train["Direction"] = (train["Index_Return"] > 0).astype(int)
+
+        X_train = train[feature_cols]
+        y_train = train["Direction"]
+
+        scaler = StandardScaler()
+        X_train_scaled = scaler.fit_transform(X_train)
+
+        model = LogisticRegression(class_weight="balanced")
+        model.fit(X_train_scaled, y_train)
+
+        X_test = pd.DataFrame([test[feature_cols]], columns=feature_cols)
+        X_test_scaled = scaler.transform(X_test)
+
+        prob_up = float(model.predict_proba(X_test_scaled)[0][1])
+        pred_direction = 1 if prob_up > 0.5 else 0
+        actual_direction = 1 if float(test["Index_Return"]) > 0 else 0
+
+        results.append({
+            "Date": test["Date"],
+            "Prob_Up": prob_up,
+            "Predicted_Direction": pred_direction,
+            "Actual_Direction": actual_direction,
+            "Actual_Return": float(test["Index_Return"]),
+        })
+
+    results_df = pd.DataFrame(results)
+
+    directional_accuracy = (
+    results_df["Predicted_Direction"] == results_df["Actual_Direction"]
+    ).mean()
+
+    always_up_accuracy = results_df["Actual_Direction"].mean()
+    predicted_up_rate = results_df["Predicted_Direction"].mean()
+
+    return {
+        "results": results_df,
+        "directional_accuracy": float(directional_accuracy),
+        "always_up_accuracy": float(always_up_accuracy),
+        "predicted_up_rate": float(predicted_up_rate),
     }
