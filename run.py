@@ -1,8 +1,9 @@
 from src.model import compute_signal
 
-result = compute_signal(
-    "data/index_data.csv",
-    rolling_window=60
+result = backtest_model(
+    "data/index_data_with_features.csv",
+    rolling_window=60,
+    use_sp500=True
 )
 
 print("Predicted return:", result["predicted_return"])
