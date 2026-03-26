@@ -8,8 +8,8 @@ print("\n--- BASIC MODEL (TA-35 only) ---")
 
 csv_path = BASE_DIR / "data" / "index_data_clean_basic.csv"
 
-for threshold in [0.55, 0.6, 0.65]:
-    print(f"\n--- GAP MODEL threshold={threshold} ---")
+for threshold in [0.001, 0.002, 0.003]:
+    print(f"\n--- GAP MODEL return_threshold={threshold} ---")
 
     result = backtest_model(
         csv_path=csv_path,
@@ -17,38 +17,53 @@ for threshold in [0.55, 0.6, 0.65]:
         use_sp500=False,
         use_vix=False,
         use_weighted_stocks=False,
-        decision_threshold=threshold,
+        return_threshold=threshold,
         long_only=True
     )
 
     print("Trade rate:", result["trade_rate"])
     print("Final strategy:", result["final_cumulative_strategy"])
     print("Buy & hold:", result["final_cumulative_buyhold"])
-
-print("Directional accuracy:", result["directional_accuracy"])
-print("Always-up accuracy:", result["always_up_accuracy"])
-print("Trade rate:", result["trade_rate"])
-print("Final strategy:", result["final_cumulative_strategy"])
-print("Buy & hold:", result["final_cumulative_buyhold"])
+    print("Directional accuracy:", result["directional_accuracy"])
+    print("Always-up accuracy:", result["always_up_accuracy"])
 
 
-# --- MODEL 2: WITH US FEATURES ---
-print("\n--- MODEL WITH SP500 + VIX ---")
+for threshold in [0.001, 0.002, 0.003]:
+    print(f"\n--- GAP MODEL return_threshold={threshold} ---")
 
-csv_path = BASE_DIR / "data" / "index_data_clean_us.csv"
+    result = backtest_model(
+        csv_path=csv_path,
+        rolling_window=60,
+        use_sp500=False,
+        use_vix=False,
+        use_weighted_stocks=False,
+        return_threshold=threshold,
+        long_only=False
+    )
 
-result = backtest_model(
-    csv_path=csv_path,
-    rolling_window=60,
-    use_sp500=True,
-    use_vix=True,
-    use_weighted_stocks=False,
-    decision_threshold=0.55,
-    long_only=True
-)
+    print("Trade rate:", result["trade_rate"])
+    print("Final strategy:", result["final_cumulative_strategy"])
+    print("Buy & hold:", result["final_cumulative_buyhold"])
+    print("Directional accuracy:", result["directional_accuracy"])
+    print("Always-up accuracy:", result["always_up_accuracy"])
 
-print("Directional accuracy:", result["directional_accuracy"])
-print("Always-up accuracy:", result["always_up_accuracy"])
-print("Trade rate:", result["trade_rate"])
-print("Final strategy:", result["final_cumulative_strategy"])
-print("Buy & hold:", result["final_cumulative_buyhold"])
+# # --- MODEL 2: WITH US FEATURES ---
+# print("\n--- MODEL WITH SP500 + VIX ---")
+
+# csv_path = BASE_DIR / "data" / "index_data_clean_us.csv"
+
+# result = backtest_model(
+#     csv_path=csv_path,
+#     rolling_window=60,
+#     use_sp500=True,
+#     use_vix=True,
+#     use_weighted_stocks=False,
+#     return_threshold=0.002,
+#     long_only=True
+# )
+
+# print("Directional accuracy:", result["directional_accuracy"])
+# print("Always-up accuracy:", result["always_up_accuracy"])
+# print("Trade rate:", result["trade_rate"])
+# print("Final strategy:", result["final_cumulative_strategy"])
+# print("Buy & hold:", result["final_cumulative_buyhold"])
