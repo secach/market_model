@@ -2,7 +2,7 @@ import os
 import pandas as pd
 
 # 🔹 Target folder to process
-target_dir = r"E:\Garry\tase"
+target_dir = r"E:\Garry\tase\index"
 
 print("Sorting CSV files in:", target_dir)
 
