@@ -4,10 +4,14 @@ from pathlib import Path
 from datetime import timedelta
 
 OUTPUT_FILE = Path("data/yahoo_dual_returns.csv")
-TARGET_LAST_DATE = "2026-04-02"   # the last date you want in the file
+YFINANCE_CACHE_DIR = Path("data/.yfinance_cache")
+TARGET_LAST_DATE = None   # set to "YYYY-MM-DD" to stop at a specific last date
 ROLLBACK_DAYS = 7
 
 tickers = ["TEVA", "NICE", "ESLT", "TSEM", "NVMI", "CAMT", "ENLT", "ORA", "ICL"]
+
+YFINANCE_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+yf.set_tz_cache_location(str(YFINANCE_CACHE_DIR))
 
 if OUTPUT_FILE.exists():
     existing = pd.read_csv(OUTPUT_FILE)
@@ -23,7 +27,12 @@ else:
     existing = pd.DataFrame()
     start_date = "2025-05-10"
 
-end_date = (pd.to_datetime(TARGET_LAST_DATE) + timedelta(days=1)).strftime("%Y-%m-%d")
+if TARGET_LAST_DATE:
+    end_date = (pd.to_datetime(TARGET_LAST_DATE) + timedelta(days=1)).strftime("%Y-%m-%d")
+else:
+    end_date = (pd.Timestamp.today().normalize() + timedelta(days=1)).strftime("%Y-%m-%d")
+
+print(f"Downloading Yahoo data from {start_date} through before {end_date}")
 
 raw = yf.download(
     tickers,

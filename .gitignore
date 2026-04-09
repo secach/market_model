@@ -17,6 +17,9 @@ __pycache__/
 # Logs
 *.log
 
+# Runtime caches
+data/.yfinance_cache/
+
 # Optional: ignore CSV if you don't want to push data
 # data/*.csv
 
