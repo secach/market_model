@@ -1,0 +1,42 @@
+=== Prototype Formula Backtest Summary ===
+Rows tested:                  45
+Trades:                       23
+Trade rate:                   51.11%
+Model directional accuracy:   64.44%
+Always-up accuracy:           60.00%
+Open-gap sign accuracy:       62.22%
+Dual-return sign accuracy:    60.00%
+Average return per trade:     0.8000%
+Cumulative strategy return:   19.76%
+Cumulative buy&hold return:   8.76%
+Max drawdown:                 -2.98%
+
+Saved backtest details to: E:\Garry\market_model\output\prototype_formula_backtest_default.csv
+
+=== Prototype Formula Backtest Summary ===
+Rows tested:                  45
+Trades:                       9
+Trade rate:                   20.00%
+Model directional accuracy:   64.44%
+Always-up accuracy:           60.00%
+Open-gap sign accuracy:       62.22%
+Dual-return sign accuracy:    60.00%
+Average return per trade:     0.7330%
+Cumulative strategy return:   6.60%
+Cumulative buy&hold return:   8.76%
+Max drawdown:                 -3.19%
+
+Saved backtest details to: E:\Garry\market_model\output\prototype_formula_backtest_quantile_07.csv
+
+=== Prototype Formula Backtest Summary ===
+Rows tested:                  45
+Trades:                       22
+Trade rate:                   48.89%
+Model directional accuracy:   62.22%
+Always-up accuracy:           60.00%
+Open-gap sign accuracy:       62.22%
+Dual-return sign accuracy:    60.00%
+Average return per trade:     0.8105%
+Cumulative strategy return:   19.08%
+Cumulative buy&hold return:   8.76%
+Max drawdown:                 -2.98%

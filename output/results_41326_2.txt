@@ -1,0 +1,145 @@
+=== gap_only ===
+Rows tested:                  45
+Trades:                       22
+Trade rate:                   48.89%
+Model directional accuracy:   62.22%
+Always-up accuracy:           60.00%
+Open-gap sign accuracy:       62.22%
+Dual-return sign accuracy:    60.00%
+Traded days up-rate:          72.73%
+Skipped days up-rate:         47.83%
+Average trade return:         0.8181%
+Median trade return:          0.5706%
+Average skipped-day return:   -0.3941%
+Median skipped-day return:    -0.2042%
+Cumulative strategy return:   19.37%
+Cumulative buy&hold return:   8.76%
+Max drawdown:                 -1.90%
+
+=== gap_dual_ret ===
+Rows tested:                  45
+Trades:                       21
+Trade rate:                   46.67%
+Model directional accuracy:   60.00%
+Always-up accuracy:           60.00%
+Open-gap sign accuracy:       62.22%
+Dual-return sign accuracy:    60.00%
+Traded days up-rate:          71.43%
+Skipped days up-rate:         50.00%
+Average trade return:         0.8665%
+Median trade return:          0.6254%
+Average skipped-day return:   -0.3858%
+Median skipped-day return:    -0.0936%
+Cumulative strategy return:   19.61%
+Cumulative buy&hold return:   8.76%
+Max drawdown:                 -1.90%
+
+=== gap_frac_up ===
+Rows tested:                  45
+Trades:                       23
+Trade rate:                   51.11%
+Model directional accuracy:   64.44%
+Always-up accuracy:           60.00%
+Open-gap sign accuracy:       62.22%
+Dual-return sign accuracy:    60.00%
+Traded days up-rate:          73.91%
+Skipped days up-rate:         45.45%
+Average trade return:         0.8000%
+Median trade return:          0.7576%
+Average skipped-day return:   -0.4302%
+Median skipped-day return:    -0.0941%
+Cumulative strategy return:   19.76%
+Cumulative buy&hold return:   8.76%
+Max drawdown:                 -2.98%
+
+=== full_formula ===
+Rows tested:                  45
+Trades:                       23
+Trade rate:                   51.11%
+Model directional accuracy:   64.44%
+Always-up accuracy:           60.00%
+Open-gap sign accuracy:       62.22%
+Dual-return sign accuracy:    60.00%
+Traded days up-rate:          73.91%
+Skipped days up-rate:         45.45%
+Average trade return:         0.8000%
+Median trade return:          0.7576%
+Average skipped-day return:   -0.4302%
+Median skipped-day return:    -0.0941%
+Cumulative strategy return:   19.76%
+Cumulative buy&hold return:   8.76%
+Max drawdown:                 -2.98%
+
+Saved summary to: output\ablation_default\ablation_summary.csv
+
+=== gap_only ===
+Rows tested:                  45
+Trades:                       15
+Trade rate:                   33.33%
+Model directional accuracy:   62.22%
+Always-up accuracy:           60.00%
+Open-gap sign accuracy:       62.22%
+Dual-return sign accuracy:    60.00%
+Traded days up-rate:          73.33%
+Skipped days up-rate:         53.33%
+Average trade return:         1.0435%
+Median trade return:          0.7249%
+Average skipped-day return:   -0.2239%
+Median skipped-day return:    0.1650%
+Cumulative strategy return:   16.65%
+Cumulative buy&hold return:   8.76%
+Max drawdown:                 -0.92%
+
+=== gap_dual_ret ===
+Rows tested:                  45
+Trades:                       13
+Trade rate:                   28.89%
+Model directional accuracy:   60.00%
+Always-up accuracy:           60.00%
+Open-gap sign accuracy:       62.22%
+Dual-return sign accuracy:    60.00%
+Traded days up-rate:          69.23%
+Skipped days up-rate:         56.25%
+Average trade return:         1.2725%
+Median trade return:          0.9748%
+Average skipped-day return:   -0.2377%
+Median skipped-day return:    0.0583%
+Cumulative strategy return:   17.70%
+Cumulative buy&hold return:   8.76%
+Max drawdown:                 -0.15%
+
+=== gap_frac_up ===
+Rows tested:                  45
+Trades:                       9
+Trade rate:                   20.00%
+Model directional accuracy:   64.44%
+Always-up accuracy:           60.00%
+Open-gap sign accuracy:       62.22%
+Dual-return sign accuracy:    60.00%
+Traded days up-rate:          66.67%
+Skipped days up-rate:         58.33%
+Average trade return:         0.7330%
+Median trade return:          0.2310%
+Average skipped-day return:   0.0650%
+Median skipped-day return:    0.2368%
+Cumulative strategy return:   6.60%
+Cumulative buy&hold return:   8.76%
+Max drawdown:                 -3.19%
+
+=== full_formula ===
+Rows tested:                  45
+Trades:                       9
+Trade rate:                   20.00%
+Model directional accuracy:   64.44%
+Always-up accuracy:           60.00%
+Open-gap sign accuracy:       62.22%
+Dual-return sign accuracy:    60.00%
+Traded days up-rate:          66.67%
+Skipped days up-rate:         58.33%
+Average trade return:         0.7330%
+Median trade return:          0.2310%
+Average skipped-day return:   0.0650%
+Median skipped-day return:    0.2368%
+Cumulative strategy return:   6.60%
+Cumulative buy&hold return:   8.76%
+Max drawdown:                 -3.19%
