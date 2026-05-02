@@ -1,0 +1,53 @@
+=== Classification Report ===
+               precision    recall  f1-score   support
+
+  Below_Short     0.9444    1.0000    0.9714        17
+Inside_Spread     0.0000    0.0000    0.0000         0
+   Above_Long     0.0000    0.0000    0.0000         1
+
+     accuracy                         0.9444        18
+    macro avg     0.3148    0.3333    0.3238        18
+ weighted avg     0.8920    0.9444    0.9175        18
+
+
+=== Confusion Matrix ===
+[[17  0  0]
+ [ 0  0  0]
+ [ 1  0  0]]
+
+=== Sample Predictions ===
+      Date Expiry_Date  TA35_Close  Short_Strike  Long_Strike  Expiry_Close  P_B
+elow_Short  P_Inside_Spread  P_Above_Long
+2026-04-09  2026-04-30     4360.40        4400.0       4410.0       4374.81
+  0.999317         0.000517      0.000165
+2026-04-10  2026-04-30     4443.22        4490.0       4500.0       4374.81
+  0.995499         0.003432      0.001069
+2026-04-13  2026-04-30     4382.71        4430.0       4440.0       4374.81
+  0.996507         0.000472      0.003021
+2026-04-14  2026-04-30     4450.82        4500.0       4510.0       4374.81
+  0.987531         0.002519      0.009950
+2026-04-15  2026-04-30     4428.64        4470.0       4480.0       4374.81
+  0.987410         0.011301      0.001289
+2026-04-16  2026-04-30     4378.45        4420.0       4430.0       4374.81
+  0.986956         0.004063      0.008981
+2026-04-17  2026-04-30     4406.32        4450.0       4460.0       4374.81
+  0.983772         0.013766      0.002462
+2026-04-20  2026-04-30     4429.47        4470.0       4480.0       4374.81
+  0.830515         0.168909      0.000576
+2026-04-23  2026-04-30     4419.65        4460.0       4470.0       4374.81
+  0.925524         0.073925      0.000551
+2026-04-24  2026-04-30     4362.45        4410.0       4420.0       4374.81
+  0.998319         0.000097      0.001584
+
+=== Latest Entry Candidate ===
+      Date Expiry_Date  TA35_Close  Short_Strike  Long_Strike  Days_To_Expiry  D
+ist_To_Short_Pct  Dist_To_Long_Pct
+2026-04-24  2026-04-30     4362.45        4410.0       4420.0               6
+          0.0109          0.013192
+
+Predicted expiry probabilities:
+Below short strike: 99.83%
+Inside spread:      0.01%
+Above long strike:  0.16%
+
+Saved monthly dataset to: E:\Garry\market_model\data\monthly_expiry_dataset.csv

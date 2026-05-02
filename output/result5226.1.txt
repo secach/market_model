@@ -1,0 +1,62 @@
+=== Expiry-month split ===
+Train months: ['2025-12', '2026-01', '2026-02', '2026-03']
+Test months:  ['2026-04']
+Train rows: 47 | Test rows: 11
+
+=== Class balance: full dataset ===
+   Below_Short:   43 (74.14%)
+ Inside_Spread:    1 (1.72%)
+    Above_Long:   14 (24.14%)
+
+=== Class balance: train ===
+   Below_Short:   33 (70.21%)
+ Inside_Spread:    1 (2.13%)
+    Above_Long:   13 (27.66%)
+
+=== Class balance: test ===
+   Below_Short:   10 (90.91%)
+ Inside_Spread:    0 (0.00%)
+    Above_Long:    1 (9.09%)
+
+=== Binary Classification Report ===
+E:\Garry\market_model\.venv\Lib\site-packages\sklearn\metrics\_classification.py
+:1833: UndefinedMetricWarning: Precision is ill-defined and being set to 0.0 in
+labels with no predicted samples. Use `zero_division` parameter to control this
+behavior.
+  _warn_prf(average, modifier, f"{metric.capitalize()} is", result.shape[0])
+E:\Garry\market_model\.venv\Lib\site-packages\sklearn\metrics\_classification.py
+:1833: UndefinedMetricWarning: Precision is ill-defined and being set to 0.0 in
+labels with no predicted samples. Use `zero_division` parameter to control this
+behavior.
+  _warn_prf(average, modifier, f"{metric.capitalize()} is", result.shape[0])
+E:\Garry\market_model\.venv\Lib\site-packages\sklearn\metrics\_classification.py
+:1833: UndefinedMetricWarning: Precision is ill-defined and being set to 0.0 in
+labels with no predicted samples. Use `zero_division` parameter to control this
+behavior.
+  _warn_prf(average, modifier, f"{metric.capitalize()} is", result.shape[0])
+              precision    recall  f1-score   support
+
+           0     0.0000    0.0000    0.0000         1
+           1     0.9091    1.0000    0.9524        10
+
+    accuracy                         0.9091        11
+   macro avg     0.4545    0.5000    0.4762        11
+weighted avg     0.8264    0.9091    0.8658        11
+
+
+=== Binary Confusion Matrix ===
+[[ 0  1]
+ [ 0 10]]
+
+=== Binary Sample Predictions ===
+      Date Expiry_Date  TA35_Close  Short_Strike  Expiry_Close  P_Below_Short
+2026-04-09  2026-04-30     4360.40        4400.0       4374.81       0.999152
+2026-04-10  2026-04-30     4443.22        4490.0       4374.81       0.999920
+2026-04-13  2026-04-30     4382.71        4430.0       4374.81       0.999858
+2026-04-14  2026-04-30     4450.82        4500.0       4374.81       0.999981
+2026-04-15  2026-04-30     4428.64        4470.0       4374.81       0.999975
+2026-04-16  2026-04-30     4378.45        4420.0       4374.81       0.999927
+2026-04-17  2026-04-30     4406.32        4450.0       4374.81       0.999976
+2026-04-20  2026-04-30     4429.47        4470.0       4374.81       0.999994
+2026-04-23  2026-04-30     4419.65        4460.0       4374.81       0.999997
+2026-04-24  2026-04-30     4362.45        4410.0       4374.81       0.999990
